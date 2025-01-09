@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:  # Configurações globais para todas as Lambdas
+  Function:
+    Runtime: python3.9
+    MemorySize: 128
+    Timeout: 10
+    Environment:
+      Variables:
+        ENV: "production"
+
+Resources:
+  Lambda1Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler  # Função handler no código
+      CodeUri: ./                              # Diretório do código da Lambda
+      Policies:
+        - AWSLambdaBasicExecutionRole          # Permissões básicas para logs no CloudWatch
+      Layers:
+        - !Ref SharedLayer                     # Referência à camada compartilhada (se necessário)
+      Events:
+        ApiEvent:                              # Define um evento HTTP para invocar remotamente
+          Type: Api
+          Properties:
+            Path: /lambda1
+            Method: GET
+
+  SharedLayer:                                 # Camada compartilhada (opcional)
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: ../shared/                   # Diretório do código compartilhado
+      CompatibleRuntimes:
+        - python3.9
+
+Outputs:
+  Lambda1FunctionArn:
+    Description: ARN da Lambda 1
+    Value: !GetAtt Lambda1Function.Arn
